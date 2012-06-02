@@ -84,7 +84,7 @@
 
         var description = hlt(result.title);
         if (result.params) {
-          description += '<dim>' + result.params + '</dim>';
+          description += '<dim>' + escapeHTML(result.params) + '</dim>';
         }
 
         omniboxResults.push({
