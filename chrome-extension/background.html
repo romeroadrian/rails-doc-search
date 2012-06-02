@@ -80,9 +80,16 @@
       if (!query)
         return;
 
+      var omniboxResults = null;
+      var started = false;
+
       searcher.ready(function(results, isLast) {
-        var omniboxResults = [];
-        for (var i = 0; i < MAX_RESULTS && i < results.length; i++) {
+        if (!started) {
+          started = true;
+          omniboxResults = [];
+        }
+
+        for (var i = 0; omniboxResults.length < MAX_RESULTS && i < results.length; i++) {
           var result = results[i];
 
           var description = hlt(result.title);
@@ -96,7 +103,10 @@
           });
         }
 
-        suggestFn(omniboxResults);
+        if (isLast) {
+          suggestFn(omniboxResults);
+          started = false;
+        }
       })
 
       searcher.find(jQuery.trim(query).toLowerCase());
