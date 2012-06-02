@@ -1,0 +1,6 @@
+#!/bin/bash
+rm -rf rails-doc-search.zip
+cd chrome-extension
+zip -qr --exclude=*.DS_Store* ../rails-doc-search.zip .
+cd ..
+zipinfo -l rails-doc-search.zip
