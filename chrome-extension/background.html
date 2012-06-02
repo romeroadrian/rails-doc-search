@@ -10,7 +10,7 @@
   var SEARCH_URL = 'http://api.rubyonrails.org/?q=';
 
   chrome.omnibox.setDefaultSuggestion({
-    description: 'Loading Rails RDoc index...'
+    description: 'Loading Ruby on Rails API index...'
   });
 
   (function init() {
@@ -20,13 +20,13 @@
         return;
       }
 
-      console.log('Successfully loaded Rails RDoc index.');
+      console.log('Successfully loaded Rails API index.');
 
       onIndexLoaded();
     }
 
     function _error() {
-      console.error('Failed to load Rails RDoc index. Retrying in 5 seconds.');
+      console.error('Failed to load Rails API index. Retrying in 5 seconds.');
       window.setTimeout(init, 5000);
     }
 
@@ -105,7 +105,7 @@
     });
 
     chrome.omnibox.setDefaultSuggestion({
-      description: 'Search Rails API for <match>%s</match>'
+      description: 'Search Ruby on Rails API for <match>%s</match>'
     });
 
     chrome.omnibox.onInputChanged.addListener(function(query, suggestFn) {
