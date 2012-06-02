@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src='jquery-1.3.2.min.js'></script>
+  <script src='searcher.js'></script>
+</head>
+<script>
+  var MAX_RESULTS = 20;
+  var INDEX_URL = 'http://api.rubyonrails.org/js/search_index.js';
+  var SEARCH_URL = 'http://api.rubyonrails.org/?q=';
+
+  var searcher = null;
+
+  chrome.omnibox.setDefaultSuggestion({
+    description: 'Loading Rails RDoc index...'
+  });
+
+  (function init() {
+    function _success() {
+      if (!search_data) {
+        _error();
+        return;
+      }
+
+      console.log('Successfully loaded Rails RDoc index.');
+
+      onIndexLoaded();
+    }
+
+    function _error() {
+      console.error('Failed to load Rails RDoc index. Retrying in 5 seconds.');
+      window.setTimeout(init, 5000);
+    }
+
+    loadScript(INDEX_URL, _success, _error);
+  })();
+
+  function loadScript(url, successFn, errorFn) {
+    successFn = successFn || function(){};
+    errorFn = errorFn || function(){};
+
+    var loadComplete = false;
+
+    var headNode = document.getElementsByTagName('head')[0];
+    var scriptNode = document.createElement('script');
+    scriptNode.type = 'text/javascript';
+    scriptNode.src = url;
+    scriptNode.onload = scriptNode.onreadystatechange = function() {
+      if ((!scriptNode.readyState ||
+           'loaded' === scriptNode.readyState ||
+           'complete' === scriptNode.readyState)
+          && !loadComplete) {
+        scriptNode.onload = scriptNode.onreadystatechange = null;
+        if (headNode && scriptNode.parentNode) {
+          headNode.removeChild(scriptNode);
+        }
+        scriptNode = undefined;
+        loadComplete = true;
+        successFn();
+      }
+    }
+    scriptNode.onerror = function() {
+      if (!loadComplete) {
+        loadComplete = true;
+        errorFn();
+      }
+    };
+
+    headNode.appendChild(scriptNode);
+  }
+
+  function onIndexLoaded() {
+    searcher = new Searcher(search_data.index);
+
+    chrome.omnibox.setDefaultSuggestion({
+      description: 'Search Rails API for <match>%s</match>'
+    });
+
+    chrome.omnibox.onInputChanged.addListener(function(query, suggestFn) {
+      if (!query)
+        return;
+
+      searcher.ready(function(results, isLast) {
+        var omniboxResults = [];
+        for (var i = 0; i < MAX_RESULTS && i < results.length; i++) {
+          var result = results[i];
+
+          var description = hlt(result.title);
+          if (result.params) {
+            description += '<dim>' + result.params + '</dim>';
+          }
+
+          omniboxResults.push({
+            content: 'http://api.rubyonrails.org/' + result.path,
+            description: description
+          });
+        }
+
+        suggestFn(omniboxResults);
+      })
+
+      searcher.find(jQuery.trim(query).toLowerCase());
+    });
+
+    chrome.omnibox.onInputEntered.addListener(function(text) {
+      if (text.match(/^http\:/)) {
+        navigateToUrl(text);
+      } else {
+        navigateToUrl(SEARCH_URL + encodeURIComponent(text));
+      }
+    });
+  }
+
+  function navigateToUrl(url) {
+    chrome.tabs.getSelected(null, function(tab) {
+      chrome.tabs.update(tab.id, {url: url});
+    });
+  }
+
+  // From searchdoc.js
+  function hlt(html) {
+      return escapeHTML(html).replace(/\u0001/g, '<match>').replace(/\u0002/g, '</match>');
+  }
+
+  function escapeHTML(html) {
+      return html.replace(/[&<>]/g, function(c) {
+          return '&#' + c.charCodeAt(0) + ';';
+      });
+  }
+</script>
+</html>
