@@ -9,8 +9,6 @@
   var INDEX_URL = 'http://api.rubyonrails.org/js/search_index.js';
   var SEARCH_URL = 'http://api.rubyonrails.org/?q=';
 
-  var searcher = null;
-
   chrome.omnibox.setDefaultSuggestion({
     description: 'Loading Rails RDoc index...'
   });
@@ -70,7 +68,36 @@
   }
 
   function onIndexLoaded() {
-    searcher = new Searcher(search_data.index);
+    var searcher = new Searcher(search_data.index);
+    var omniboxResults = null;
+    var started = false;
+    var suggestCallback = null;
+
+    searcher.ready(function(results, isLast) {
+      if (!started) {
+        started = true;
+        omniboxResults = [];
+      }
+
+      for (var i = 0; omniboxResults.length < MAX_RESULTS && i < results.length; i++) {
+        var result = results[i];
+
+        var description = hlt(result.title);
+        if (result.params) {
+          description += '<dim>' + result.params + '</dim>';
+        }
+
+        omniboxResults.push({
+          content: 'http://api.rubyonrails.org/' + result.path,
+          description: description
+        });
+      }
+
+      if (isLast) {
+        started = false;
+        suggestCallback(omniboxResults);
+      }
+    });
 
     chrome.omnibox.setDefaultSuggestion({
       description: 'Search Rails API for <match>%s</match>'
@@ -79,36 +106,7 @@
     chrome.omnibox.onInputChanged.addListener(function(query, suggestFn) {
       if (!query)
         return;
-
-      var omniboxResults = null;
-      var started = false;
-
-      searcher.ready(function(results, isLast) {
-        if (!started) {
-          started = true;
-          omniboxResults = [];
-        }
-
-        for (var i = 0; omniboxResults.length < MAX_RESULTS && i < results.length; i++) {
-          var result = results[i];
-
-          var description = hlt(result.title);
-          if (result.params) {
-            description += '<dim>' + result.params + '</dim>';
-          }
-
-          omniboxResults.push({
-            content: 'http://api.rubyonrails.org/' + result.path,
-            description: description
-          });
-        }
-
-        if (isLast) {
-          suggestFn(omniboxResults);
-          started = false;
-        }
-      })
-
+      suggestCallback = suggestFn || function(){};
       searcher.find(jQuery.trim(query).toLowerCase());
     });
 
