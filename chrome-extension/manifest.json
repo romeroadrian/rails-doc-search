@@ -14,5 +14,7 @@
   "omnibox": {
     "keyword": "rd"
   },
-  "background_page": "background.html"
+  "background": {
+    "page": "background.html"
+  }
 }
