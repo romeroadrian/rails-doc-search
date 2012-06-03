@@ -1,6 +1,6 @@
 {
   "name": "Ruby on Rails API Search",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "manifest_version": 1,
   "description": "Search the Ruby on Rails API Documentation",
   "permissions": [
