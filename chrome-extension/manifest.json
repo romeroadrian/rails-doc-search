@@ -1,8 +1,9 @@
 {
+  "manifest_version": 2,
   "name": "Ruby on Rails API Search",
-  "version": "0.1.2",
-  "manifest_version": 1,
   "description": "Search the Ruby on Rails API Documentation",
+  "version": "0.1.3",
+  "content_security_policy": "script-src 'self' https://ssl.google-analytics.com; object-src 'self'",
   "permissions": [
     "tabs",
     "http://api.rubyonrails.org/*"
@@ -14,5 +15,7 @@
   "omnibox": {
     "keyword": "rd"
   },
-  "background_page": "background.html"
+  "background": {
+    "scripts": ["jquery.min.js","searcher.js", "search_index.js", "background.js", "ga.js"]
+  }
 }
